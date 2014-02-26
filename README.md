@@ -1,4 +1,4 @@
-skadoosh
+Skadoosh
 ========
 
 DOM generator utility - JavaScript
@@ -21,15 +21,11 @@ Skadoosh generates a hierarchy of DOM elements in a smart and compact way.
         );
     }(skadoosh));
 
----
-
 ## API
-
----
 
 #### skadoosh.DOM_ELEMENT( arg [, content1 [, content2 [, ... [, contentN]]]] )
 
-`arg` - {Object|String|Function|Node|Array}
+`arg` :: `Object`, `String`, `Function`, `Node`, `Array`
 
 Method can be overloaded with optional arguments.
 
@@ -73,9 +69,9 @@ Method can be overloaded with optional arguments.
 
 Registers a custom generator. If no generator method is specified, name will be used to create the Element.
 
-    var derp = ska.registerGenerator("derp"); // > {Function} DOM factory
+    var derp = ska.generateDOMFactory("herp"); // > {Function} DOM factory
     
-    derp(); // <derp></derp>
+    herp(); // <herp></herp>
 
 > **note:** for XML support
 
@@ -83,9 +79,9 @@ Registers a custom generator. If no generator method is specified, name will be 
 
 ### skadoosh.append( parent, content )
 
-`arg` - {Document|DocumentFragment|Element}
+`parent` :: `Document`, `DocumentFragment`, `Element`
 
-`content` - {String|Function|Node|Array}
+`content` :: `String`, `Function`, `Node`, `Array`
 
 Appends the `content` to the `parent`.
 
