@@ -160,6 +160,21 @@
     
     
     /**
+     * Resolves the provided argument to a Node fi it is a function or a string.
+     * @param {Function|String|*} node
+     * @returns {Node|*}
+     */
+    var ensureNode = function (node) {
+        switch (typeof node) {
+            case "function": return node();
+            case "string": return document.createTextNode(node);
+            default: return node;
+        }
+    };
+    
+    
+    
+    /**
      * Appends the content to the parent.
      * @param {Node} parent - element to append to
      * @param {Node|String|Array} content - congtent to append
@@ -168,15 +183,23 @@
         var i, l;
         
         if (content) {
-            if (typeof content === "function") {
-                append(parent, content());
-            } else if (typeof content === "object" && content instanceof Array) {
+            if (typeof content === "object" && content instanceof Array) {
                 for (i = 0, l = content.length; i < l; i++) {
                     append(parent, content[i]);
                 }
-            } else if (typeof content === "string") {
-                content = document.createTextNode(content);
+            } else {
+                content = ensureNode(content);
             }
+            
+            // if (typeof content === "function") {
+            //     append(parent, content());
+            // } else if (typeof content === "object" && content instanceof Array) {
+            //     for (i = 0, l = content.length; i < l; i++) {
+            //         append(parent, content[i]);
+            //     }
+            // } else if (typeof content === "string") {
+            //     content = document.createTextNode(content);
+            // }
             
             // 1: ELEMENT_NODE
             // 3: TEXT_NODE
@@ -277,6 +300,23 @@
                 _setAttributes(element, data, "data-");
             }
         };
+    
+    
+    
+    /**
+     * Replaces an element with another.
+     * @param {Node} oldElement - element to replace
+     * @param {Node} newElement - element for replacement
+     */
+    var replace = skadoosh.replace = function (oldElement, newElement) {
+        var parent = oldElement.parentNode;
+        
+        newElement = ensureNode(newElement);
+        
+        if (parent && newElement) {
+            parent.replaceChild(newElement, oldElement);
+        }
+    };
     
     
     

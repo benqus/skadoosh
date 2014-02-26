@@ -197,6 +197,16 @@
             assert.equal(df.childNodes[1].outerHTML, "<strong></strong>");
         });
         
+        it("can replace elements", function () {
+            var a = ska.a();
+            var df = ska.fragment(a);
+            
+            ska.replace(a, ska.span);
+            
+            assert.equal(df.childNodes.length, 1);
+            assert.equal(df.childNodes[0].outerHTML, "<span></span>");
+        });
+        
     });
 
 }(skadoosh, chai));
