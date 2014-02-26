@@ -1,13 +1,36 @@
-(function (document, Node) {
+/**
+ * Skadoosh - 0.2.0
+ * 
+ * Author: Bence Kormos <https://github.com/benqus>
+ * License: MIT <https://github.com/benqus/skadoosh/blob/master/LICENSE>
+ */
+(function (root, factory) {
+    // UMD
+    
     /**
-     * @namespace skadoosh
-     * @type {Object}
+     * @namespace
      */
-    var skadoosh = this.skadoosh = {};
+    var exports = (typeof exports === "object" ? exports : {});
+    
+    if (typeof define === "function" && define.amd) {
+        define("skadoosh", [], function () {
+            return factory(exports);
+        });
+    } else {
+        factory(exports);
+        
+        if (typeof Window === "function") {
+            root.skadoosh = exports;
+        }
+    }
+}((function () {
+    return this;
+}()), function (skadoosh) {
+    var slice = Array.prototype.slice;
     
     // list of HTML5 elements
     // source: https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5/HTML5_element_list
-    var tags = [
+    var tags = skadoosh.tags = [
         "html",
         
         "head",
@@ -134,6 +157,92 @@
         "menu"
     ];
     
+    
+    
+    /**
+     * Appends the content to the parent.
+     * @param {Node} parent - element to append to
+     * @param {Node|String|Array} content - congtent to append
+     */
+    var append = skadoosh.append = function (parent, content) {
+        var i, l;
+        
+        if (content) {
+            if (typeof content === "function") {
+                append(parent, content());
+            } else if (typeof content === "object" && content instanceof Array) {
+                for (i = 0, l = content.length; i < l; i++) {
+                    append(parent, content[i]);
+                }
+            } else if (typeof content === "string") {
+                content = document.createTextNode(content);
+            }
+            
+            // 1: ELEMENT_NODE
+            // 3: TEXT_NODE
+            if (typeof content === "object" && [1,3].indexOf(content.nodeType) > -1) {
+                parent.appendChild(content);
+            }
+        }
+    };
+    
+    
+    
+    /**
+     * Short-hand, convenice method to create a
+     * DocumentFragment intance with children
+     * @arguments
+     * @returns {DocumentFragment}
+     */
+    var fragment = skadoosh.fragment = function () {
+        var fragment = document.createDocumentFragment();
+        var content = slice.call(arguments, 0);
+        append(fragment, content);
+        return fragment;
+    };
+    
+    
+    
+    /**
+     * Creates (memoizes) a generator for the provided tag.
+     * @param {String} tag - tag to create the generator for
+     * @param {Object} [namespace] - namespace to register the factory on
+     */
+    var generateDOMFactory = skadoosh.generateDOMFactory =
+        function (tag, namespace) {
+            /**
+             * DOM Node factory.
+             * @param {Array|Function|Node|String} arg - attributes or content
+             * @arguments
+             */
+            var factory = function (arg) {
+                var element = document.createElement(tag);
+                var content = slice.call(arguments, 1);
+                
+                if (typeof arg === "object" &&
+                    !(arg instanceof Node) &&
+                    !(arg instanceof Array))
+                {
+                    setAttributes(element, arg);
+                } else {
+                    append(element, arg);
+                }
+                
+                append(element, content);
+                
+                return element;
+            };
+            
+            // register DOM factory to the procided namespace
+            if (namespace && !namespace.hasOwnProperty(tag)) {
+                namespace[tag] = factory;
+            }
+            
+            return factory;
+        };
+    
+    
+    
     /**
      * Sets the attributes for the provided Element.
      * Recursive
@@ -143,170 +252,39 @@
      * @param {Object} [attributes] - attributes to set on the element
      * @param {String} [prefix] - eg: "data-"
      */
-    var setAttributes = function _setAttributes(element, attributes, prefix) {
-        var data, className, i;
-        
-        if (attributes) {
-            data = attributes.data;
-            className = (attributes.className || attributes["class"]);
-            prefix = (prefix || "");
+    var setAttributes = skadoosh.setAttributes =
+        function _setAttributes(element, attributes, prefix) {
+            var data, className, i;
             
-            if (className) {
-                element.setAttribute("class", className)
-            }
-            
-            delete attributes.data;
-            delete attributes.className;
-            delete attributes["class"];
-            
-            for (i in attributes) {
-                if (attributes.hasOwnProperty(i)) {
-                    element.setAttribute(i, (prefix + attributes[i]));
-                }
-            }
-            
-            _setAttributes(element, data, "data-");
-        }
-    };
-    
-    /**
-     * Appends the provided children to the element.
-     * @private
-     * @static
-     * @param {Element} element - element to append the children to
-     * @param {Array} [children] - children to append
-     */
-    var appendChildren = function (element, children) {
-        var i = 0;
-        var child, l;
-        
-        if (children && (l = children.length) > 0) {
-            while (i < l) {
-                child = children[i++];
+            if (attributes) {
+                data = attributes.data;
+                className = attributes.className;
+                prefix = (prefix || "");
                 
-                if (typeof child === "string") {
-                    child = document.createTextNode(child);
-                } else if (typeof child === "function") {
-                    child = child();
+                if (className) {
+                    element.setAttribute("class", className)
                 }
                 
-                element.appendChild(child);
-            }
-        }
-    };
-    
-    /**
-     * Proxy to restrict to content to an array.
-     * @private
-     * @static
-     * @param {Node} element - the node to append the content into
-     * @param {Array|Node}
-     */
-    var appendContent = function (element, content) {
-        var arg = content;
-        
-        if (!(content instanceof Array)) {
-            if (typeof content === "object") {
-                arg = [content];
-            } else {
-                arg = [document.createTextNode(content || "")];
-            }
-        }
-        
-        appendChildren(element, arg);
-    };
-    
-    /**
-     * Creates (memoizes) a generator for the provided tag.
-     * @private
-     * @static
-     * @param {String} tag - tag to create the generator for
-     */
-    var domGeneratorFactory = function (tag) {
-        return function (arg, content) {
-            var element = document.createElement(tag);
-            var isArray = arg instanceof Array;
-            
-            if (arg) {
-                // 1: ELELMENT_NODE
-                // 3: TEXT_NODE
-                // 9: DOCUMENT_NODE
-                // 11: DOCUMENT_FRAGMENT_NODE
-                if (!isArray && [1, 3, 9, 11].indexOf(arg.nodeType) > -1) {
-                    appendContent(element, arg);
-                } else if (!isArray && typeof arg === "object") {
-                    setAttributes(element, arg);
-                    appendContent(element, content)
-                } else if (typeof arg === "function") {
-                    appendContent(element, arg());
-                } else {
-                    appendContent(element, arg);
+                delete attributes.data;
+                delete attributes.className;
+                
+                for (i in attributes) {
+                    if (attributes.hasOwnProperty(i)) {
+                        element.setAttribute(i, (prefix + attributes[i]));
+                    }
                 }
+                
+                _setAttributes(element, data, "data-");
             }
-            
-            return element;
-        }
-    };
+        };
     
-    var tag;
-    while (tags.length > 0) {
-        tag = tags.shift();
-        skadoosh[tag] = domGeneratorFactory(tag);
+    
+    
+    // expose
+    var i = 0;
+    var l = tags.length;
+    
+    while (i < l) {
+        generateDOMFactory(tags[i++], skadoosh);
     }
-    
-    /**
-     * Slight idea to allow custom (context bound, if required) 
-     * or to support XML stuff which this isn't a serious idea...
-     * @param {String} tag - new tag to register in the supported tags array
-     * @param {Function} [generator]
-     */
-    skadoosh.registerGenerator = function (tag, generator) {
-        if (tags.indexOf(tag) < 0) {
-            tags.push(tag);
-            
-            if (typeof generator === "function") {
-                skadoosh[tag] = function (arg, content) {
-                    return generator(arg, content);
-                };
-            } else {
-                skadoosh[tag] = domGeneratorFactory(tag);
-            }
-        }
-    };
-    
-    /**
-     * In case your conventions restrict the usage of certain elements.
-     * This isn't a serious idea either...
-     * @param {String} tag - tag to remove
-     */
-    skadoosh.removeGenerator = function (tag) {
-        var index = tags.indexOf(tag);
-        
-        if (index > -1) {
-            tags.splice(index, 1);
-            delete skadoosh[tag];
-        }
-    };
-    
-    /**
-     * Short-hand, convenice method to create a
-     * DocumentFragment intance with children
-     * @param {Node} [content] - content
-     * @returns {DocumentFragment}
-     */
-    skadoosh.createFragment = function (content) {
-        var fragment = document.createDocumentFragment();
-        
-        if (content) {
-            appendContent(fragment, content);
-        }
-        
-        return fragment;
-    }
-    
-    /**
-     * @type {Array}
-     */
-    skadoosh.tags = tags; // to support testing
-    
-}.call(this, document, Node));
+}));

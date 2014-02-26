@@ -3,29 +3,35 @@ skadoosh
 
 DOM generator utility - JavaScript
 
-Not surprisingly, skadoosh generates a hierarchy of DOM elements
+Skadoosh generates a hierarchy of DOM elements in a smart and compact way.
 
-### Usage:
+---
+
+### Example:
 
     (function (ska) {
-        
         var dom = ska.section(
             ska.header,
-            ska.article([
+            ska.article(
                 ska.p("Random content one..."),
                 ska.p("Random content two...")
                 ska.p("Random content three...")
-            ]),
+            ),
             ska.footer
         );
-        
     }(skadoosh));
 
-## API:
+---
 
-### skadoosh.DOM_ELEMENT( arg, [content] )
+## API
+
+---
+
+#### skadoosh.DOM_ELEMENT( arg [, content1 [, content2 [, ... [, contentN]]]] )
 
 `arg` - {Object|String|Function|Node|Array}
+
+Method can be overloaded with optional arguments.
 
     var ska = skadoosh;
     
@@ -45,40 +51,49 @@ Not surprisingly, skadoosh generates a hierarchy of DOM elements
         document.createElement("header")
     );
 
-Array of any type mentioned above:
-
+    // Array
     ska.ul([
         ska.li,
         ska.li,
         ska.li
     ]);
 
-`content` - optional
+    // arguments
+    ska.aside(
+        ska.nav,
+        ska.article,
+        ska.footer
+    );
 
-Any String, Node, or DOM generator Function
+> **note:** only the first arguments is handled as a map of options. The remaining arguments can be `String`, `Array`, `Function` or `Node`.
 
-### skadoosh.registerGenerator( name, [generator] )
+---
+
+### skadoosh.generateDOMFactory( name, [generator] )
 
 Registers a custom generator. If no generator method is specified, name will be used to create the Element.
 
-    var derp, herp;
+    var derp = ska.registerGenerator("derp"); // > {Function} DOM factory
     
-    // derp
-    ska.registerGenerator("derp");
-    
-    derp = ska.derp(); // <derp></derp>
+    derp(); // <derp></derp>
 
-    // herp
-    ska.registerGenerator("herp", function () {
-        // custom logic
-        return ska.p("Herps");
-    });
-    
-    herp = ska.herp(); // <p>Herps</p>
+> **note:** for XML support
 
-### skadoosh.createFragment( [content] )
+---
 
-Creates a DocumentFragment with optional content.
+### skadoosh.append( parent, content )
+
+`arg` - {Document|DocumentFragment|Element}
+
+`content` - {String|Function|Node|Array}
+
+Appends the `content` to the `parent`.
+
+---
+
+### skadoosh.fragment( [content] )
+
+Creates a DocumentFragment with optional content. Contents can be `String`, `Array`, `Function` or `Node`.
 
 ### License
 

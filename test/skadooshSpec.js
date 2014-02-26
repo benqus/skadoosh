@@ -97,6 +97,56 @@
                 assert.equal(div.innerHTML, "ab<a>c</a>");
             });
     
+            it("can take {String} argument", function () {
+                // since each generator is created by the same
+                // factory it is enough to test only one of them
+                var div = ska.div([
+                    "a",
+                    "b"
+                ]);
+                
+                assert.equal(div.childNodes.length, 2);
+                assert.equal(div.innerHTML, "ab");
+            });
+    
+            it("can take {Node} arguments", function () {
+                // since each generator is created by the same
+                // factory it is enough to test only one of them
+                var div = ska.div(
+                    document.createTextNode("a"),
+                    document.createTextNode("b")
+                );
+                
+                assert.equal(div.childNodes.length, 2);
+                assert.equal(div.innerHTML, "ab");
+            });
+    
+            it("can take {Function} arguments", function () {
+                // since each generator is created by the same
+                // factory it is enough to test only one of them
+                var div = ska.div(
+                    ska.span,
+                    ska.a
+                );
+                
+                assert.equal(div.childNodes.length, 2);
+                assert.equal(div.innerHTML, "<span></span><a></a>");
+            });
+    
+            it("can take mixed arguments", function () {
+                // since each generator is created by the same
+                // factory it is enough to test only one of them
+                var div = ska.div(
+                    document.createTextNode("a"),
+                    "b",
+                    ska.a("c")
+                );
+                
+                
+                assert.equal(div.childNodes.length, 3);
+                assert.equal(div.innerHTML, "ab<a>c</a>");
+            });
+    
             it("can take an {Object} and {Array|Node|String}", function () {
                 // since each generator is created by the same
                 // factory it is enough to test only one of them
@@ -110,11 +160,8 @@
             });
     
             it("can be created (custom) and removed as a tag", function () {
-                var element;
-                
-                ska.registerGenerator("custom");
-                
-                element = ska.custom({
+                var custom = ska.generateDOMFactory("custom", ska);
+                var element = custom({
                     "id": "a",
                     "class": "b"
                 });
@@ -122,36 +169,16 @@
                 assert.equal(element.tagName.toLowerCase(), "custom");
                 assert.equal(element.getAttribute("id"), "a");
                 assert.equal(element.getAttribute("class"), "b");
-                
-                ska.removeGenerator("custom");
-                
-                assert.notOk(ska.custom);
-            });
-    
-            it("can be created (custom) as a tag with custom generator", function () {
-                ska.registerGenerator("custom", function (attributes, content) {
-                    assert.equal(attributes.a, "a");
-                    assert.equal(attributes.b, "b");
-                    assert.equal(content, "content");
-                });
-                
-                ska.custom({
-                    "a": "a",
-                    "b": "b"
-                }, "content");
-                
-                ska.removeGenerator("custom");
-                
-                assert.notOk(ska.custom);
+                assert.equal(ska.custom, custom);
             });
     
             it("allow nesting", function () {
                 var html = ska.a([
                     ska.span,
-                    ska.span([
+                    ska.span(
                         ska.i("italic"),
                         "content"
-                    ])
+                    )
                 ]);
                 
                 assert.equal(html.outerHTML, "<a><span></span><span><i>italic</i>content</span></a>");
@@ -160,10 +187,10 @@
         });
         
         it("can create a DocumentFragment with content", function () {
-            var df = ska.createFragment([
+            var df = ska.fragment(
                 ska.a,
                 ska.strong
-            ]);
+            );
             
             assert.equal(df.childNodes.length, 2);
             assert.equal(df.childNodes[0].outerHTML, "<a></a>");
