@@ -87,6 +87,16 @@ Appends the `content` to the `parent`.
 
 ---
 
+### skadoosh.replace( oldElement, newElement )
+
+`oldElement` :: `Element`
+
+`newElement` :: `Node`
+
+Replaces the `oldElement` with the `newElement`.
+
+---
+
 ### skadoosh.fragment( [content] )
 
 Creates a DocumentFragment with optional content. Contents can be `String`, `Array`, `Function` or `Node`.
